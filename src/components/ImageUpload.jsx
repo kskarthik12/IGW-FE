@@ -53,6 +53,7 @@ const ImageUpload = () => {
                 // Send data as JSON
                 sendFormData(formData);
             };
+            
         } else {
             toast.error('Please select an image file');
         }

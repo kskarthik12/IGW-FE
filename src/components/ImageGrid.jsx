@@ -7,7 +7,7 @@ const ImageGrid = ({ images }) => {
 
 
   const totalPages = Math.ceil(images.length / imagesPerPage);
-
+   console.log(images)
   
   const indexOfLastImage = currentPage * imagesPerPage;
   const indexOfFirstImage = indexOfLastImage - imagesPerPage;
@@ -34,7 +34,7 @@ const ImageGrid = ({ images }) => {
       <div className="image-grid">
         {currentImages.map((image, index) => (
           <div key={index} className="image-item">
-            <img src={image.imagePath} alt={image.text} />
+            <img src={image.imageBuffer ? `data:image/png;base64,${image.imageBuffer}` : image.imagePath} alt={image.text} />
           </div>
         ))}
       </div>
