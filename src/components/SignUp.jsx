@@ -11,6 +11,7 @@ import { ProgressBar } from 'react-loader-spinner';
 
 
 
+
 function SignUp() {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false);

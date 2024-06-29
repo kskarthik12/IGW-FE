@@ -1,4 +1,4 @@
-import React,{useEffect} from 'react'
+import React,{useEffect,useState} from 'react'
 import { Link } from 'react-router-dom'
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
@@ -7,9 +7,11 @@ import  ApiRoutes from '../utils/ApiRoutes'
 import asset from '../assets/login.jpg'
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { ProgressBar } from 'react-loader-spinner';
 
 function Login() {
   const navigate = useNavigate()
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(()=>{ 
     sessionStorage.clear()
@@ -17,6 +19,7 @@ function Login() {
 
   const handleLogin = async(e)=>{
     e.preventDefault()
+    setIsLoading(true);
     try {
       let formData = new FormData(e.target)
       let data = Object.fromEntries(formData)
@@ -46,6 +49,9 @@ function Login() {
     } catch (error) {
         toast.error(error.response.data.message || error.message)
     }
+    finally {
+      setIsLoading(false);
+    }
   }
 
   return <>
@@ -73,7 +79,19 @@ function Login() {
             Login
           </Button>
         </Form>
-        
+        {isLoading && (
+          <div className="loading-container">
+            <ProgressBar
+              visible={true}
+              height="80"
+              width="80"
+              color="#4fa94d"
+              ariaLabel="progress-bar-loading"
+              wrapperStyle={{}}
+              wrapperClass=""
+            />
+          </div>
+        )}
   
       </div>
     

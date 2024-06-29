@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import AxiosService  from '../utils/AxiosService';
+import AxiosService from '../utils/AxiosService';
 import ApiRoutes from '../utils/ApiRoutes';
 import Header from './Header';
 import Button from 'react-bootstrap/Button';
@@ -7,10 +7,12 @@ import Form from 'react-bootstrap/Form';
 import toast from 'react-hot-toast';
 import upload from '../assets/upload.jpg';
 import { useNavigate } from 'react-router-dom';
+import { ProgressBar } from 'react-loader-spinner';
 
 const ImageUpload = () => {
     const [selectedFile, setSelectedFile] = useState(null);
     const navigate = useNavigate()
+    const [isLoading, setIsLoading] = useState(false);
 
 
     const handleFileChange = (event) => {
@@ -19,69 +21,76 @@ const ImageUpload = () => {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-      
         
-        let design_code = document.getElementById('design_code').value;
-        let text = document.getElementById('text').value;
-        let label = document.getElementById('label').value;
-    
-        // Split the design_code, text, and label by comma and trim each element
-        let design_code_array = design_code.split(',').map(code => code.trim());
-        let text_array = text.split(',').map(item => item.trim());
-        let label_array = label.split(',').map(item => item.trim());
-    
-        // Convert the arrays to strings formatted like arrays
-        design_code = `['${design_code_array.join("','")}']`;
-        text = `['${text_array.join("','")}']`;
-        label = `['${label_array.join("','")}']`; 
+        try {
+            let design_code = document.getElementById('design_code').value;
+            let text = document.getElementById('text').value;
+            let label = document.getElementById('label').value;
 
+            // Split the design_code, text, and label by comma and trim each element
+            let design_code_array = design_code.split(',').map(code => code.trim());
+            let label_array = label.split(',').map(item => item.trim());
 
-        const formData = {
-            serial_number: document.getElementById('serial_number').value,
-            design_code: design_code,
-            text: text,
-            label: label
-        };
-
-        if (selectedFile) {
-            // Convert file to base64 string
-            const reader = new FileReader();
-            reader.readAsDataURL(selectedFile);
-            reader.onloadend = () => {
-                formData.image = reader.result.split(',')[1]; // Get base64 string without data URL part
-
-                // Send data as JSON
-                sendFormData(formData);
-            };
+            // Convert the arrays to strings formatted like arrays
+            design_code = `['${design_code_array.join("','")}']`;
             
-        } else {
-            toast.error('Please select an image file');
+            label = `['${label_array.join("','")}']`;
+
+
+            const formData = {
+                serial_number: document.getElementById('serial_number').value,
+                design_code: design_code,
+                text: text,
+                label: label
+            };
+
+            if (selectedFile) {
+                // Convert file to base64 string
+                const reader = new FileReader();
+                reader.readAsDataURL(selectedFile);
+                reader.onloadend = () => {
+                    formData.image = reader.result.split(',')[1]; // Get base64 string without data URL part
+
+                    // Send data as JSON
+                    sendFormData(formData);
+                };
+
+            } else {
+                toast.error('Please select an image file');
+            }
+        }
+        catch (error) {
+            toast.error(error.response?.data?.message || error.message);
+        }
+        finally {
+            setIsLoading(false);
         }
     };
 
     const sendFormData = async (formData) => {
+        setIsLoading(true);
         try {
             const res = await AxiosService.post(ApiRoutes.UPLOAD.path, formData, {
-                authenticate:ApiRoutes.UPLOAD.authenticate
+                authenticate: ApiRoutes.UPLOAD.authenticate
             });
 
             if (res.status === 201) {
 
                 toast.success('Image uploaded successfully');
                 navigate('/home')
-            }else{
+            } else {
                 toast.error('Image upload failed');
             }
-            
+
         } catch (error) {
             toast.error(error.response.data?.message || 'An unexpected error occurred');
         }
-        
+
     };
 
     return (
         <>
-        
+
             <Header />
             <img src={upload} alt="upload"></img>
             <div className='loginWrapper'>
@@ -118,8 +127,22 @@ const ImageUpload = () => {
                         Upload
                     </Button>
                 </Form>
+
+                {isLoading && (
+                    <div className="loading-container">
+                        <ProgressBar
+                            visible={true}
+                            height="80"
+                            width="80"
+                            color="#4fa94d"
+                            ariaLabel="progress-bar-loading"
+                            wrapperStyle={{}}
+                            wrapperClass=""
+                        />
+                    </div>
+                )}
             </div>
-            
+
         </>
     );
 };
