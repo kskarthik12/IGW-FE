@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 
 const SearchBar = ({ onSearch }) => {
   const [keyword, setKeyword] = useState('');
+  
 
   const handleSearch = (e) => {
     e.preventDefault();

@@ -1,24 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import SearchBar from './SearchBar';
-import AxiosService  from '../utils/AxiosService';
+import AxiosService from '../utils/AxiosService';
 import ApiRoutes from '../utils/ApiRoutes';
 import ImageGrid from './ImageGrid';
 import Header from './Header';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import toast from 'react-hot-toast';
+import LoadingOverlay from 'react-loading-overlay-ts';
 
 
 function Home() {
   const [images, setImages] = useState([]);
   const [filterType, setFilterType] = useState('All');
-  const [all, setAll] = useState([])
+  const [all, setAll] = useState([]);
   const [date, setDate] = useState(new Date());
   const [noImagesFound, setNoImagesFound] = useState(null);
-  const [searchInitiated, setSearchInitiated] = useState(false); 
-
-
- 
+  const [searchInitiated, setSearchInitiated] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleFilterChange = (event) => {
     const { value } = event.target;
@@ -27,72 +26,62 @@ function Home() {
   };
 
   const fetchImages = async (keyword) => {
-
+    setIsLoading(true);
     try {
       let res = await AxiosService.get(ApiRoutes.IMAGE.path, {
         params: { tag: keyword },
         authenticate: ApiRoutes.IMAGE.authenticate
       });
-      setNoImagesFound(false)
+      setNoImagesFound(false);
       setImages(res.data.data);
-      setAll(res.data.data)
-      setSearchInitiated(true); 
-      if(res.status===200){
+      setAll(res.data.data);
+      setSearchInitiated(true);
+      if (res.status === 200) {
         toast.success('Images fetched successfully');
-      }
-      else{
+      } else {
         toast.error('Error fetching images');
       }
-
     } catch (error) {
-      
       toast.error(error.response.data?.message || 'An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
     }
-    
   };
 
-
   const filterImages = (filterType) => {
-    let filteredImages = [...images];
-
+    let filteredImages = [...all];
     if (filterType === 'popularity') {
       filteredImages = filteredImages.filter(image => image.popularity > 0);
       filteredImages.sort((a, b) => b.popularity - a.popularity);
       if (filteredImages.length === 0) {
-        setNoImagesFound(true)
+        setNoImagesFound(true);
       } else {
         setImages(filteredImages);
-        setNoImagesFound(false)
-        
+        setNoImagesFound(false);
       }
     } else if (filterType === 'All') {
-      filteredImages = [...all];
       setImages(filteredImages);
-      setNoImagesFound(false)
-      setFilterType('All')
+      setNoImagesFound(false);
     }
-
-
   };
 
   const handleDateChange = (date) => {
-    let filteredImages = [...images];
     const formattedDate = date.toISOString().split('T')[0];
-    setDate(formattedDate)
-    filteredImages = filteredImages.filter(image => image.createdAt === formattedDate);
+    setDate(date);
+    const filteredImages = all.filter(image => image.createdAt === formattedDate);
     if (filteredImages.length === 0) {
-      setNoImagesFound(true)
-
-    }
-    else {
+      setNoImagesFound(true);
+    } else {
       setImages(filteredImages);
-      setNoImagesFound(false)
+      setNoImagesFound(false);
     }
-  }
+  };
 
   return (
     <>
-     <Header />
+     <LoadingOverlay active={isLoading} spinner text='Loading your content...'>
+      <Header />
+     
       {!searchInitiated && ( // Render before search initiated
         <div className="home-container">
           <div className="centered-content">
@@ -100,8 +89,10 @@ function Home() {
           </div>
           <SearchBar onSearch={fetchImages} />
         </div>
-      )}
 
+      )}
+  
+      
       {searchInitiated && ( // Render after search initiated
         <>
           {noImagesFound ? (
@@ -125,7 +116,6 @@ function Home() {
                     />
                   </div>
                 )}
-                
               </div>
               <p className="no-images-message">No images found for the selected criteria.</p>
             </div>
@@ -156,8 +146,9 @@ function Home() {
           )}
         </>
       )}
+      </LoadingOverlay>
     </>
-  )}
-
+  );
+}
 
 export default Home;
